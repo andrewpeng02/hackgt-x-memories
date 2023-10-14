@@ -7,8 +7,10 @@ import BackgroundImage from '../assets/background.jpeg';
 import { findUser } from '../utils/firebase/realtimedb';
 
 function SearchBar() {
-  const [opened, setOpened] = useState(false);
-  const [email, setEmail] = useState('');
+  const [opened, setOpened] = useState(false)
+  const [email, setEmail] = useState('')
+  const [errorMessage, setErrorMesssage] = useState('')
+
 
   if (opened) {
     return (
@@ -18,7 +20,9 @@ function SearchBar() {
           name='close'
           color='#517fa4'
           onPress={() => {
-            setOpened(false);
+            setOpened(false)
+            setEmail('')
+            setErrorMesssage('')
           }}
           containerStyle={styles.close}
         />
@@ -29,6 +33,7 @@ function SearchBar() {
           containerStyle={styles.inputContainerStyle}
           inputContainerStyle={{ borderBottomWidth: 0 }}
         />
+        {errorMessage && <Text style={styles.errorMessage}>{errorMessage}</Text>}
         <Icon
           reverse
           name='forward'
@@ -87,6 +92,12 @@ const styles = StyleSheet.create({
     left: 90,
     width: 250,
     height: 40,
+  },
+  errorMessage: {
+    position: 'absolute',
+    bottom: 25,
+    left: 90,
+    color: 'red'
   },
   container: {
     flex: 1,
