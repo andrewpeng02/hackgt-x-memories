@@ -28,14 +28,15 @@ const renderEvents = (
   }[]
 ) => {
   if (events.length > 0) {
-    return events.map((event, index) => {
+    return events.map((event) => {
       return (
         <View style={eventStyles.mainView}>
-          <View style={eventStyles.firstCol}>
-            <Text style={eventStyles.dateText}>{event.date}</Text>
-          </View>
-          <View style={eventStyles.secondCol}>
+          <View style={eventStyles.firstRow}>
             <Text style={eventStyles.titleText}>{event.name}</Text>
+            <Text style={eventStyles.dateText}>{event.date}</Text>
+            <Text style={eventStyles.dateText}>@{' ' + event.location}</Text>
+          </View>
+          <View style={eventStyles.firstCol}>
             <ImageGallery imageSources={event.imageIDs} />
           </View>
         </View>
@@ -46,22 +47,19 @@ const renderEvents = (
 
 const eventStyles = StyleSheet.create({
   mainView: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     backgroundColor: '#fff',
     justifyContent: 'space-around',
     alignItems: 'center',
     flex: 1,
   },
-  firstCol: {
-    flexGrow: 0.15,
-    alignItems: 'center',
+  firstRow: {
+    width: '100%',
     padding: 10,
   },
-  secondCol: {
-    flexGrow: 1,
-    maxWidth: '70%',
+  firstCol: {
     height: '100%',
-    padding: 10,
+    padding: 20,
   },
   titleText: {
     fontSize: 16,
@@ -302,7 +300,7 @@ export default function ChatScreen({ navigation, route }) {
       }
     };
     func();
-  }, [auth.currentUser?.uid, friendID]);
+  }, [auth.currentUser?.uid, friendID, showCreateEvent]);
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -322,7 +320,7 @@ export default function ChatScreen({ navigation, route }) {
     <View style={styles.container}>
       <View style={styles.topBar}>
         <Text style={styles.friendName}>{route.params.user[1].name}</Text>
-        {route.params.tree}
+        <View style={styles.tree}>{route.params.tree}</View>
       </View>
       <AskFriend
         name={route.params.user[1].name}
@@ -370,12 +368,10 @@ const styles = StyleSheet.create({
   },
   topBar: {
     borderBottomWidth: 1,
-    padding: 15,
-    flex: 1,
+    paddingHorizontal: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    flexGrow: 1,
     height: 100,
     maxHeight: 100,
   },
@@ -419,6 +415,7 @@ const styles = StyleSheet.create({
     left: 20,
   },
   scrollView: {
+    padding: 10,
     zIndex: -1,
   },
 });
