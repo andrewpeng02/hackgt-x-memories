@@ -4,11 +4,13 @@ import React, { useState } from 'react';
 import { ImageBackground, StyleSheet, View } from 'react-native';
 
 import BackgroundImage from '../assets/background.jpeg';
+import { findUser } from '../utils/firebase/realtimedb';
 
 function SearchBar() {
   const [opened, setOpened] = useState(false)
   const [email, setEmail] = useState('')
   const [errorMessage, setErrorMesssage] = useState('')
+
 
   if (opened) {
     return (
@@ -24,11 +26,12 @@ function SearchBar() {
           }}
           containerStyle={styles.close}
         />
-        <Input placeholder='Email' 
+        <Input
+          placeholder='Email'
           value={email}
           onChangeText={(text) => setEmail(text)}
-          containerStyle={styles.inputContainerStyle} 
-          inputContainerStyle={{borderBottomWidth:0}} 
+          containerStyle={styles.inputContainerStyle}
+          inputContainerStyle={{ borderBottomWidth: 0 }}
         />
         {errorMessage && <Text style={styles.errorMessage}>{errorMessage}</Text>}
         <Icon
@@ -36,23 +39,29 @@ function SearchBar() {
           name='forward'
           color='#517fa4'
           onPress={() => {
-            setOpened(true)
+            setOpened(true);
+            //user either exists or undefined
+            findUser(email).then((user) => {
+              console.log(user);
+            });
           }}
           containerStyle={styles.add}
         />
       </View>
-    )
+    );
   }
 
-  return (<Icon
-    reverse
-    name='add'
-    color='#517fa4'
-    onPress={() => {
-      setOpened(true)
-    }}
-    containerStyle={styles.add}
-  />)
+  return (
+    <Icon
+      reverse
+      name='add'
+      color='#517fa4'
+      onPress={() => {
+        setOpened(true);
+      }}
+      containerStyle={styles.add}
+    />
+  );
 }
 
 export default function HomeScreen() {
@@ -63,7 +72,7 @@ export default function HomeScreen() {
         <SearchBar />
       </ImageBackground>
 
-      <StatusBar style="auto" />
+      <StatusBar style='auto' />
     </View>
   );
 }
@@ -73,7 +82,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     height: 120,
-    width: '100%'
+    width: '100%',
   },
   inputContainerStyle: {
     position: 'absolute',
@@ -82,7 +91,7 @@ const styles = StyleSheet.create({
     bottom: 45,
     left: 90,
     width: 250,
-    height: 40
+    height: 40,
   },
   errorMessage: {
     position: 'absolute',
@@ -101,11 +110,11 @@ const styles = StyleSheet.create({
   add: {
     position: 'absolute',
     bottom: 30,
-    right: 20
+    right: 20,
   },
   close: {
     position: 'absolute',
     bottom: 30,
-    left: 20
-  }
+    left: 20,
+  },
 });
