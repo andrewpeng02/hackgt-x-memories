@@ -152,5 +152,5 @@ export const getEventsByRelationship = async (relID: string) => {
 
 export const getStrengthByRelationship = async (relID: string) => {
   const events = await getEventsByRelationship(relID);
-  return Math.min(Object.keys(events).length, 4);
+  return Math.min(events ? Object.keys(events).length : 0, 4);
 };
