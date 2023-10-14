@@ -19,21 +19,17 @@ import { uploadPhoto } from '../utils/firebase/storage';
 
 const auth = getAuth();
 
-const createEvents = (
+const renderEvents = (
   events: {
     name: string;
     date: string;
     location: string;
-    imageIDs: string[];
-  }[],
-  eventImageURIs: string[][]
+    imageIDs: { uri: string }[];
+  }[]
 ) => {
-  if (events) {
-    return events.map((event) => {
-      const imageURIs: string[] = [];
-      event.imageIDs.forEach((imageID) => {
-        getImageURI(imageID).then((res) => imageURIs.push(res));
-      });
+  if (events.length > 0) {
+    return events.map((event, index) => {
+      console.log('Evnet', event.imageIDs);
       return (
         <View style={eventStyles.mainView}>
           <View style={eventStyles.firstCol}>
@@ -41,9 +37,7 @@ const createEvents = (
           </View>
           <View style={eventStyles.secondCol}>
             <Text style={eventStyles.titleText}>{event.name}</Text>
-            {imageURIs.map((imageURI) => {
-              return <Image source={imageURI as any} />;
-            })}
+            <ImageGallery imageSources={event.imageIDs} />
           </View>
         </View>
       );
@@ -75,6 +69,11 @@ const eventStyles = StyleSheet.create({
   },
   dateText: {
     fontSize: 12,
+  },
+  image: {
+    aspectRatio: 1,
+    width: '100%',
+    flex: 1,
   },
 });
 
@@ -267,10 +266,27 @@ export default function ChatScreen({ navigation, route }) {
   const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [assets, setAssets] = useState<ImagePickerAsset[]>([]);
   const [events, setEvents] = useState([]);
-  const [eventImageURIs, setEventImageURIs] = useState([]);
-
+  const [updatedEvents, setUpdatedEvents] = useState([]);
   const friendID = route.params.user[0];
   const relID = getRelationship(auth.currentUser!.uid, friendID);
+
+  useEffect(() => {
+    setUpdatedEvents([]);
+    const func = async () => {
+      events.forEach(async (event, index) => {
+        const eventImageIDs = await Promise.all(
+          event.imageIDs.map(async (imageID) => {
+            const a = await getImageURI(imageID);
+            return { uri: a };
+          })
+        );
+        const newEvent = event;
+        newEvent.imageIDs = eventImageIDs;
+        setUpdatedEvents((updatedEvents) => [...updatedEvents, newEvent]);
+      });
+    };
+    func();
+  }, [events]);
 
   useEffect(() => {
     setEvents([]);
@@ -285,17 +301,7 @@ export default function ChatScreen({ navigation, route }) {
             })
           )
         );
-        events.forEach((event) => {
-          const eventImageIDs = event.imageIDs.map(async (imageID) => {
-            return await getImageURI(imageID);
-          });
-          setEventImageURIs((eventImageURIs) => [
-            ...eventImageURIs,
-            eventImageIDs,
-          ]);
-        });
       }
-      console.log(eventImageURIs);
     };
     func();
   }, [auth.currentUser?.uid, friendID]);
@@ -325,7 +331,7 @@ export default function ChatScreen({ navigation, route }) {
         id={friendID}
         navigation={navigation}
       />
-      {createEvents()}
+      {renderEvents(updatedEvents)}
       <Icon
         reverse
         name='add'
@@ -370,7 +376,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     flexGrow: 1,
-    maxHeight: 100
+    maxHeight: 100,
   },
   friendName: {
     fontSize: 30,
