@@ -24,7 +24,8 @@
     "react-native-elements": "^3.4.3",
     "uuid": "^9.0.1",
     "react-native-get-random-values": "~1.9.0",
-    "expo-asset": "~8.10.1"
+    "expo-asset": "~8.10.1",
+    "expo-media-library": "~15.4.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
