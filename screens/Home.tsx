@@ -155,11 +155,11 @@ function getTrees(treeInfos: TreeInfo[], navigation) {
   let left = 30;
   let top = 0;
   return treeInfos.map((treeInfo) => {
-    if (top === 500) {
-      top = 125;
+    if (top === 600) {
+      top = 150;
       left += 150;
     } else {
-      top += 125;
+      top += 150;
     }
 
     let sumDigits = 0
@@ -172,8 +172,8 @@ function getTrees(treeInfos: TreeInfo[], navigation) {
       }
     }
 
-    const leftRandomized = left + Math.floor((sumDigits % 10) * 3);
-    const topRandomized = top + Math.floor((sumAll % 10) * 4);
+    const leftRandomized = left + Math.floor((sumDigits % 10) * 4);
+    const topRandomized = top + Math.floor((sumAll % 10) * 3);
 
     return (
       <Tree
