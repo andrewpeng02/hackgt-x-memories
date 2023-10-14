@@ -1,7 +1,7 @@
 import { Button, Icon, Input, Text, Image } from '@rneui/themed';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, ScrollView } from 'react-native';
 
 import {
   addEventToRelationship,
@@ -29,7 +29,6 @@ const renderEvents = (
 ) => {
   if (events.length > 0) {
     return events.map((event, index) => {
-      console.log('Evnet', event.imageIDs);
       return (
         <View style={eventStyles.mainView}>
           <View style={eventStyles.firstCol}>
@@ -48,10 +47,10 @@ const renderEvents = (
 const eventStyles = StyleSheet.create({
   mainView: {
     flexDirection: 'row',
-    backgroundColor: '#ddd',
+    backgroundColor: '#fff',
     justifyContent: 'space-around',
     alignItems: 'center',
-    height: 100,
+    flex: 1,
   },
   firstCol: {
     flexGrow: 0.15,
@@ -60,6 +59,7 @@ const eventStyles = StyleSheet.create({
   },
   secondCol: {
     flexGrow: 1,
+    maxWidth: '70%',
     height: '100%',
     padding: 10,
   },
@@ -71,8 +71,6 @@ const eventStyles = StyleSheet.create({
     fontSize: 12,
   },
   image: {
-    aspectRatio: 1,
-    width: '100%',
     flex: 1,
   },
 });
@@ -331,7 +329,9 @@ export default function ChatScreen({ navigation, route }) {
         id={friendID}
         navigation={navigation}
       />
-      {renderEvents(updatedEvents)}
+      <ScrollView style={styles.scrollView}>
+        {renderEvents(updatedEvents)}
+      </ScrollView>
       <Icon
         reverse
         name='add'
@@ -376,6 +376,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     flexGrow: 1,
+    height: 100,
     maxHeight: 100,
   },
   friendName: {
@@ -416,5 +417,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 30,
     left: 20,
+  },
+  scrollView: {
+    zIndex: -1,
   },
 });
