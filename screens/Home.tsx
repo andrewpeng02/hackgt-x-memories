@@ -202,7 +202,11 @@ function SearchBar({ navigation }) {
             setOpened(true);
             //user either exists or undefined
             findUser(email).then((user) => {
-              if (user) navigation.navigate('Chat', { user: user });
+              if (user) { 
+                setEmail('')
+                setOpened(false)
+                navigation.navigate('Chat', { user: user });
+              }
               else setErrorMesssage('User not found');
             });
           }}

@@ -85,20 +85,19 @@ export const getUserInfo = async (userID: string) => {
   }
 };
 
-export const getRelationship = (user1ID: string, user2ID: string) => {
+export const getRelationship = async (user1ID: string, user2ID: string) => {
   const friendRef = ref(database, 'friends/' + user1ID + '/' + user2ID);
-  get(friendRef)
-    .then((snapshot) => {
-      if (snapshot.exists()) {
-        console.log(snapshot.val());
-        return snapshot.val();
-      } else {
-        console.log('No relationship');
-      }
-    })
-    .catch((error) => {
-      console.error(error);
-    });
+  try {
+    const snapshot = await get(friendRef);
+
+    if (snapshot.exists()) {
+      return snapshot.val();
+    } else {
+      console.error("No relationship");
+    }
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 export const createEvent = (

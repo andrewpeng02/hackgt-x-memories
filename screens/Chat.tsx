@@ -84,10 +84,19 @@ const imageGalleryStyles = StyleSheet.create({
   }
 })
 
-function CreateEvent({ assets, relID, handleBack }: { assets: ImagePickerAsset[], relID: string, handleBack: () => {} }) {
+function CreateEvent({ assets, friendID, handleBack }: { assets: ImagePickerAsset[], friendID: string, handleBack: () => {} }) {
   const [eventName, setEventName] = useState<string>('')
   const [location, setLocation] = useState<string>('')
   const [errorMessage, setErrorMesssage] = useState<string>('')
+  const [relID, setRelID] = useState('')
+  useEffect(() => {
+    const setRel = async () => {
+      setRelID(await getRelationship(auth.currentUser!.uid, friendID))
+    }
+    setRel()
+  }, [])
+  
+
   const imageSources = assets.map(asset => {
     return {
       uri: asset.uri
@@ -104,7 +113,7 @@ function CreateEvent({ assets, relID, handleBack }: { assets: ImagePickerAsset[]
       return
     }
     setErrorMesssage("")
-    
+
     const imageIDs = await Promise.all(assets.map(asset => uploadPhoto(asset.uri)))
     await addEventToRelationship(relID, eventName, (new Date()).toLocaleString(), location, imageIDs)
     handleBack()
@@ -167,8 +176,7 @@ export default function ChatScreen({ navigation, route }) {
   const [showCreateEvent, setShowCreateEvent] = useState(false)
   const [assets, setAssets] = useState<ImagePickerAsset[]>([])
   const friendID = route.params.user[0]
-  const relID = getRelationship(auth.currentUser!.uid, friendID)
-  
+
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       quality: 1,
@@ -200,7 +208,7 @@ export default function ChatScreen({ navigation, route }) {
       />
       {(showCreateEvent && assets.length > 0) ? <CreateEvent 
                                                   assets={assets!} 
-                                                  relID={relID}
+                                                  friendID={friendID}
                                                   handleBack={() => {
                                                     setAssets([])
                                                     setShowCreateEvent(false)
