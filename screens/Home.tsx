@@ -7,6 +7,7 @@ import { useAssets } from 'expo-asset';
 import BackgroundImage from '../assets/background.jpeg';
 import { getAuth, signOut } from 'firebase/auth';
 import { getFriends, findUser, getStrengthByRelationship, getUserInfo } from '../utils/firebase/realtimedb';
+import { useIsFocused } from '@react-navigation/native';
 
 type TreeInfo = { friendName: string; stage: number; treeName: string; friendID: string; };
 type TreeProps = {
@@ -94,7 +95,7 @@ function Tree({ friendName, stage, treeName, friendID, left, top, navigation }: 
   }
 
   const handlePress = () => {
-    navigation.navigate('Chat', { user: [friendID, { name: friendName, id: friendID}] });
+    navigation.navigate('Chat', { user: [friendID, { name: friendName, id: friendID}], tree: <Image source={{ uri: asset.uri }} style={[treeStyles.image, dimensions]} /> });
   };
 
   return (
@@ -161,8 +162,18 @@ function getTrees(treeInfos: TreeInfo[], navigation) {
       top += 125;
     }
 
-    const leftRandomized = left + Math.floor(Math.random() * 30);
-    const topRandomized = top + Math.floor(Math.random() * 40);
+    let sumDigits = 0
+    let sumAll = 0
+    for (let i = 0; i < treeInfo.friendID.length; i++) {
+      const c = treeInfo.friendID.charAt(i)
+      sumAll += c.charCodeAt(0)
+      if (c >= '0' && c <= '9') {
+        sumDigits += c.charCodeAt(0)
+      }
+    }
+
+    const leftRandomized = left + Math.floor((sumDigits % 10) * 3);
+    const topRandomized = top + Math.floor((sumAll % 10) * 4);
 
     return (
       <Tree
@@ -180,6 +191,7 @@ function SearchBar({ navigation }) {
   const [opened, setOpened] = useState(false);
   const [email, setEmail] = useState('');
   const [errorMessage, setErrorMesssage] = useState('');
+  const [firTreeAsset] = useAssets([require('../assets/fir_tree/1.png')])
 
   if (opened) {
     return (
@@ -216,7 +228,8 @@ function SearchBar({ navigation }) {
               if (user) { 
                 setEmail('')
                 setOpened(false)
-                navigation.navigate('Chat', { user: user });
+                const tree = <Image source={{ uri: firTreeAsset![0].uri }} style={[treeStyles.image, firTreeDimensions[0]]} />
+                navigation.navigate('Chat', { user: user, tree: tree });
               }
               else setErrorMesssage('User not found');
             });
@@ -242,13 +255,14 @@ function SearchBar({ navigation }) {
 
 export default function HomeScreen({ navigation }) {
   const [treeInfos, setTreeInfos] = useState<TreeInfo[]>();
+  const isFocused = useIsFocused();
 
   useEffect(() => {
     const setTreeInfosAsync = async () => {
       setTreeInfos(await getTreeInfos())
     }
     setTreeInfosAsync()
-  }, []);
+  }, [isFocused]);
 
   return (
     <View style={styles.container}>

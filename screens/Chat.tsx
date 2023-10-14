@@ -316,12 +316,15 @@ export default function ChatScreen({ navigation, route }) {
 
   return (
     <View style={styles.container}>
+      <View style={styles.topBar}>
+        <Text style={styles.friendName}>{route.params.user[1].name}</Text>
+        {route.params.tree}
+      </View>
       <AskFriend
         name={route.params.user[1].name}
         id={friendID}
         navigation={navigation}
       />
-      <Text>{route.params.user[1].name}</Text>
       {createEvents()}
       <Icon
         reverse
@@ -358,6 +361,19 @@ const styles = StyleSheet.create({
     paddingTop: 15,
     width: '100%',
     justifyContent: 'space-around',
+  },
+  topBar: {
+    borderBottomWidth: 1,
+    padding: 15,
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexGrow: 1,
+    maxHeight: 100
+  },
+  friendName: {
+    fontSize: 30,
   },
   inputContainerStyle: {
     position: 'absolute',
