@@ -51,21 +51,36 @@ export const addFriend = (adderUID: string, addedUID: string) => {
   }
 };
 
-export const getFriends = (userID: string) => {
+export const getFriends = async (userID: string) => {
   const friendListRef = ref(database, "friends/" + userID);
-  get(friendListRef)
-    .then((snapshot) => {
-      if (snapshot.exists()) {
-        console.log(snapshot.val());
-        return snapshot.val();
-      } else {
-        console.log("No friends");
-      }
-    })
-    .catch((error) => {
-      console.error(error);
-    });
+  try {
+    const snapshot = await get(friendListRef)
+
+    if (snapshot.exists()) {
+      console.log(snapshot.val());
+      return snapshot.val();
+    } else {
+      console.log("No friends");
+    }
+  } catch (error) {
+    console.error(error);
+  }
 };
+
+export const getUserInfo = async (userID: string) => {
+  const userInfoRef = ref(database, "users/" + userID)
+  try {
+    const snapshot = await get(userInfoRef)
+
+    if (snapshot.exists()) {
+      return snapshot.val();
+    } else {
+      console.log("User doesn't exist");
+    }
+  } catch (error) {
+    console.error(error);
+  }
+}
 
 export const getRelationship = (user1ID: string, user2ID: string) => {
   const friendRef = ref(database, "friends/" + user1ID + "/" + user2ID);
@@ -118,34 +133,22 @@ export const addImagesToEvent = (eventID: string, imageIDs: string[]) => {
   return eventID;
 };
 
-export const getEventsByRelationship = (relID: string) => {
+export const getEventsByRelationship = async (relID: string) => {
   const relListRef = ref(database, "relationships/" + relID);
-  get(relListRef)
-    .then((snapshot) => {
-      if (snapshot.exists()) {
-        console.log(snapshot.val());
-        return snapshot.val();
-      } else {
-        console.log("No events");
-      }
-    })
-    .catch((error) => {
-      console.error(error);
-    });
+  try {
+    const snapshot = await get(relListRef)
+
+    if (snapshot.exists()) {
+      return snapshot.val();
+    } else {
+      console.log("No events");
+    }
+  } catch (error) {
+    console.error(error);
+  }
 };
 
-export const getNumberOfEventsByRelationship = (relID: string) => {
-  const relListRef = ref(database, "relationships/" + relID);
-  get(relListRef)
-    .then((snapshot) => {
-      if (snapshot.exists()) {
-        console.log(Object.keys(snapshot.val()).length);
-        return Object.keys(snapshot.val()).length;
-      } else {
-        console.log("No events");
-      }
-    })
-    .catch((error) => {
-      console.error(error);
-    });
+export const getStrengthByRelationship = async (relID: string) => {
+  const events = await getEventsByRelationship(relID)
+  return Math.min(Object.keys(events).length, 4)
 };
