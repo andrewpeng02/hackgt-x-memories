@@ -1,14 +1,14 @@
-import React from "react";
-import app from "../../config/firebase";
+import React from 'react';
+import app from '../../config/firebase';
 import {
   getStorage,
   ref,
   uploadBytesResumable,
   getDownloadURL,
-} from "firebase/storage";
-import * as ImagePicker from "expo-image-picker";
-import "react-native-get-random-values";
-import { v4 as uuidv4 } from "uuid";
+} from 'firebase/storage';
+import * as ImagePicker from 'expo-image-picker';
+import 'react-native-get-random-values';
+import { v4 as uuidv4 } from 'uuid';
 
 const storage = getStorage(app);
 
@@ -28,6 +28,12 @@ export const pickImage = async () => {
   }
 };
 
+export async function getImageURI(imageID: string) {
+  const storageRef = ref(storage, 'images/' + imageID);
+  const downloadURL = await getDownloadURL(storageRef);
+  return downloadURL;
+}
+
 export async function uploadPhoto(imageURI: string) {
   const getBlobFromURI = async (imageURI: string) => {
     const blob: Blob = await new Promise((resolve, reject) => {
@@ -36,10 +42,10 @@ export async function uploadPhoto(imageURI: string) {
         resolve(xhr.response);
       };
       xhr.onerror = function (e) {
-        reject(new TypeError("Network request failed"));
+        reject(new TypeError('Network request failed'));
       };
-      xhr.responseType = "blob";
-      xhr.open("GET", imageURI, true);
+      xhr.responseType = 'blob';
+      xhr.open('GET', imageURI, true);
       xhr.send(null);
     });
 
@@ -47,22 +53,22 @@ export async function uploadPhoto(imageURI: string) {
   };
 
   const imageID = uuidv4();
-  const storageRef = ref(storage, "images/" + imageID);
+  const storageRef = ref(storage, 'images/' + imageID);
   const image = await getBlobFromURI(imageURI);
   const uploadTask = uploadBytesResumable(storageRef, image);
 
   uploadTask.on(
-    "state_changed",
+    'state_changed',
     (snapshot) => {
       const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-      console.log("Upload progress: " + progress);
+      console.log('Upload progress: ' + progress);
     },
     (error) => {
       console.error(error.code, error.message);
     },
     () => {
       getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-        console.log("File available at", downloadURL);
+        console.log('File available at', downloadURL);
       });
     }
   );

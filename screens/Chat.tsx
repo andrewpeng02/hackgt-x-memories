@@ -1,16 +1,82 @@
 import { Button, Icon, Input, Text, Image } from '@rneui/themed';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
-import { ImageBackground, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import BackgroundImage from '../assets/background.jpeg';
-import { addEventToRelationship, addFriend, getFriends, getRelationship } from '../utils/firebase/realtimedb';
+import {
+  addEventToRelationship,
+  addFriend,
+  getEvent,
+  getEventsByRelationship,
+  getFriends,
+  getRelationship,
+} from '../utils/firebase/realtimedb';
 import { getAuth } from 'firebase/auth';
+import { getImageURI } from '../utils/firebase/storage';
 import * as ImagePicker from 'expo-image-picker';
 import { ImagePickerAsset } from 'expo-image-picker';
 import { uploadPhoto } from '../utils/firebase/storage';
 
 const auth = getAuth();
+
+const createEvents = (
+  events: {
+    name: string;
+    date: string;
+    location: string;
+    imageIDs: string[];
+  }[],
+  eventImageURIs: string[][]
+) => {
+  if (events) {
+    return events.map((event) => {
+      const imageURIs: string[] = [];
+      event.imageIDs.forEach((imageID) => {
+        getImageURI(imageID).then((res) => imageURIs.push(res));
+      });
+      return (
+        <View style={eventStyles.mainView}>
+          <View style={eventStyles.firstCol}>
+            <Text style={eventStyles.dateText}>{event.date}</Text>
+          </View>
+          <View style={eventStyles.secondCol}>
+            <Text style={eventStyles.titleText}>{event.name}</Text>
+            {imageURIs.map((imageURI) => {
+              return <Image source={imageURI as any} />;
+            })}
+          </View>
+        </View>
+      );
+    });
+  } else return <></>;
+};
+
+const eventStyles = StyleSheet.create({
+  mainView: {
+    flexDirection: 'row',
+    backgroundColor: '#ddd',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    height: 100,
+  },
+  firstCol: {
+    flexGrow: 0.15,
+    alignItems: 'center',
+    padding: 10,
+  },
+  secondCol: {
+    flexGrow: 1,
+    height: '100%',
+    padding: 10,
+  },
+  titleText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  dateText: {
+    fontSize: 12,
+  },
+});
 
 const AskFriend = (friend: { name: string; id: string; navigation: any }) => {
   const [opened, setOpened] = useState(false);
@@ -60,14 +126,18 @@ const AskFriend = (friend: { name: string; id: string; navigation: any }) => {
   } else return <></>;
 };
 
-function ImageGallery({ imageSources }: {imageSources: {uri: string}[]}) {
+function ImageGallery({ imageSources }: { imageSources: { uri: string }[] }) {
   return (
     <View style={imageGalleryStyles.container}>
-      {imageSources.map(imageSource => <Image source={imageSource} 
-                                              key={imageSource.uri} 
-                                              style={imageGalleryStyles.image} />)}
+      {imageSources.map((imageSource) => (
+        <Image
+          source={imageSource}
+          key={imageSource.uri}
+          style={imageGalleryStyles.image}
+        />
+      ))}
     </View>
-  )
+  );
 }
 
 const imageGalleryStyles = StyleSheet.create({
@@ -75,67 +145,88 @@ const imageGalleryStyles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
   image: {
     width: 100,
     height: 100,
-    margin: 5
-  }
-})
+    margin: 5,
+  },
+});
 
-function CreateEvent({ assets, friendID, handleBack }: { assets: ImagePickerAsset[], friendID: string, handleBack: () => {} }) {
-  const [eventName, setEventName] = useState<string>('')
-  const [location, setLocation] = useState<string>('')
-  const [errorMessage, setErrorMesssage] = useState<string>('')
-  const [relID, setRelID] = useState('')
+function CreateEvent({
+  assets,
+  friendID,
+  handleBack,
+}: {
+  assets: ImagePickerAsset[];
+  friendID: string;
+  handleBack: () => {};
+}) {
+  const [eventName, setEventName] = useState<string>('');
+  const [location, setLocation] = useState<string>('');
+  const [errorMessage, setErrorMesssage] = useState<string>('');
+  const [relID, setRelID] = useState('');
   useEffect(() => {
     const setRel = async () => {
-      setRelID(await getRelationship(auth.currentUser!.uid, friendID))
-    }
-    setRel()
-  }, [])
-  
+      setRelID(await getRelationship(auth.currentUser!.uid, friendID));
+    };
+    setRel();
+  }, []);
 
-  const imageSources = assets.map(asset => {
+  const imageSources = assets.map((asset) => {
     return {
-      uri: asset.uri
-    }
-  })
+      uri: asset.uri,
+    };
+  });
 
   const createEvent = async () => {
     if (!eventName) {
-      setErrorMesssage("Must input an event name")
-      return
+      setErrorMesssage('Must input an event name');
+      return;
     }
     if (!location) {
-      setErrorMesssage("Must input a location name")
-      return
+      setErrorMesssage('Must input a location name');
+      return;
     }
-    setErrorMesssage("")
+    setErrorMesssage('');
 
-    const imageIDs = await Promise.all(assets.map(asset => uploadPhoto(asset.uri)))
-    await addEventToRelationship(relID, eventName, (new Date()).toLocaleString(), location, imageIDs)
-    handleBack()
-  }
-  
+    const imageIDs = await Promise.all(
+      assets.map((asset) => uploadPhoto(asset.uri))
+    );
+    await addEventToRelationship(
+      relID,
+      eventName,
+      new Date().toLocaleString(),
+      location,
+      imageIDs
+    );
+    handleBack();
+  };
+
   return (
     <View style={createEventStyles.container}>
       <Text style={createEventStyles.title}>Create your event</Text>
-      <Input label="Title" 
-                onChangeText={(text) => setEventName(text)}
+      <Input label='Title' onChangeText={(text) => setEventName(text)} />
+      <Input label='Location' onChangeText={(text) => setLocation(text)} />
+      {errorMessage ? (
+        <Text style={createEventStyles.errorMessage}>{errorMessage}</Text>
+      ) : undefined}
+      <ImageGallery imageSources={imageSources} />
+      <View style={createEventStyles.buttonContainer}>
+        <Button
+          title='Back'
+          buttonStyle={createEventStyles.buttons}
+          onPress={handleBack}
         />
-        <Input label="Location" 
-                onChangeText={(text) => setLocation(text)}
+        <Button
+          title='Create'
+          buttonStyle={createEventStyles.buttons}
+          onPress={createEvent}
         />
-        {errorMessage ? <Text style={createEventStyles.errorMessage}>{errorMessage}</Text> : undefined }
-        <ImageGallery imageSources={imageSources} />
-        <View style={createEventStyles.buttonContainer}>
-          <Button title="Back" buttonStyle={createEventStyles.buttons} onPress={handleBack}/>
-          <Button title="Create" buttonStyle={createEventStyles.buttons} onPress={createEvent}/>
-        </View>
+      </View>
     </View>
-  )
+  );
 }
 
 const createEventStyles = StyleSheet.create({
@@ -151,46 +242,78 @@ const createEventStyles = StyleSheet.create({
   title: {
     textAlign: 'center',
     margin: 20,
-    fontSize: 20
+    fontSize: 20,
   },
   buttonContainer: {
     flex: 1,
     flexDirection: 'row',
     marginTop: 40,
     margin: 20,
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
   },
   buttons: {
     width: 150,
-    borderRadius: 20
+    borderRadius: 20,
   },
   errorMessage: {
     color: 'red',
     textAlign: 'center',
     marginTop: -10,
-    marginBottom: 10
-  }
-})
+    marginBottom: 10,
+  },
+});
 
 export default function ChatScreen({ navigation, route }) {
-  const [showCreateEvent, setShowCreateEvent] = useState(false)
-  const [assets, setAssets] = useState<ImagePickerAsset[]>([])
-  const friendID = route.params.user[0]
+  const [showCreateEvent, setShowCreateEvent] = useState(false);
+  const [assets, setAssets] = useState<ImagePickerAsset[]>([]);
+  const [events, setEvents] = useState([]);
+  const [eventImageURIs, setEventImageURIs] = useState([]);
+
+  const friendID = route.params.user[0];
+  const relID = getRelationship(auth.currentUser!.uid, friendID);
+
+  useEffect(() => {
+    setEvents([]);
+    const func = async () => {
+      const relID = await getRelationship(auth.currentUser!.uid, friendID);
+      const eventIDs = await getEventsByRelationship(relID);
+      if (eventIDs) {
+        setEvents(
+          await Promise.all(
+            Object.values(eventIDs).map((event) => {
+              return getEvent(event);
+            })
+          )
+        );
+        events.forEach((event) => {
+          const eventImageIDs = event.imageIDs.map(async (imageID) => {
+            return await getImageURI(imageID);
+          });
+          setEventImageURIs((eventImageURIs) => [
+            ...eventImageURIs,
+            eventImageIDs,
+          ]);
+        });
+      }
+      console.log(eventImageURIs);
+    };
+    func();
+  }, [auth.currentUser?.uid, friendID]);
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       quality: 1,
-      allowsMultipleSelection: true
+      allowsMultipleSelection: true,
     });
 
     if (!result.canceled && result.assets) {
-      setShowCreateEvent(true)
-      setAssets(result.assets)
+      setShowCreateEvent(true);
+      setAssets(result.assets);
     } else {
       console.error('You did not select any image.');
     }
-  }
-  
+  };
+
   return (
     <View style={styles.container}>
       <AskFriend
@@ -199,6 +322,7 @@ export default function ChatScreen({ navigation, route }) {
         navigation={navigation}
       />
       <Text>{route.params.user[1].name}</Text>
+      {createEvents()}
       <Icon
         reverse
         name='add'
@@ -206,13 +330,16 @@ export default function ChatScreen({ navigation, route }) {
         onPress={pickImage}
         containerStyle={styles.add}
       />
-      {(showCreateEvent && assets.length > 0) ? <CreateEvent 
-                                                  assets={assets!} 
-                                                  friendID={friendID}
-                                                  handleBack={() => {
-                                                    setAssets([])
-                                                    setShowCreateEvent(false)
-                                                  }}/> : null }
+      {showCreateEvent && assets.length > 0 ? (
+        <CreateEvent
+          assets={assets!}
+          friendID={friendID}
+          handleBack={() => {
+            setAssets([]);
+            setShowCreateEvent(false);
+          }}
+        />
+      ) : null}
       <StatusBar style='auto' />
     </View>
   );

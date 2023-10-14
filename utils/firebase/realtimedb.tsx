@@ -50,6 +50,8 @@ export const addFriend = async (adderUID: string, addedUID: string) => {
     const friendRef2 = ref(database, 'friends/' + addedUID + '/' + adderUID);
     set(friendRef2, relID);
 
+    const relRef = ref(database, 'relationships/' + relID);
+    set(relRef, []);
     return 1;
   } else return -1;
 };
@@ -93,7 +95,7 @@ export const getRelationship = async (user1ID: string, user2ID: string) => {
     if (snapshot.exists()) {
       return snapshot.val();
     } else {
-      console.error("No relationship");
+      console.error('No relationship');
     }
   } catch (error) {
     console.error(error);
@@ -133,6 +135,21 @@ export const addImagesToEvent = (eventID: string, imageIDs: string[]) => {
   });
 
   return eventID;
+};
+
+export const getEvent = async (eventID: string) => {
+  const eventListRef = ref(database, 'events/' + eventID);
+  try {
+    const snapshot = await get(eventListRef);
+
+    if (snapshot.exists()) {
+      return snapshot.val();
+    } else {
+      console.log('No events');
+    }
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 export const getEventsByRelationship = async (relID: string) => {
