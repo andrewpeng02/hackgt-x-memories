@@ -7,18 +7,46 @@ import { v4 as uuidv4 } from "uuid";
 const database = getDatabase(app);
 
 export const addFriend = (adderUID: string, addedUID: string) => {
-  const friendListRef = ref(database, "friends/" + adderUID);
-  push(friendListRef, addedUID);
+  const friendRef = ref(database, "friends/" + adderUID + "/" + addedUID);
+  const alreadyFriends = get(friendRef).then((snapshot) => {
+    if (snapshot.exists()) return 1;
+  });
+  if (!alreadyFriends) {
+    const relID = uuidv4();
+    set(friendRef, relID);
+
+    const friendRef2 = ref(database, "friends/" + addedUID + "/" + adderUID);
+    set(friendRef2, relID);
+
+    ref(database, "relationships/" + relID);
+  }
 };
 
-export const getFriends = (UID: string) => {
-  const friendListRef = ref(database, "friends/" + UID);
+export const getFriends = (userID: string) => {
+  const friendListRef = ref(database, "friends/" + userID);
   get(friendListRef)
     .then((snapshot) => {
       if (snapshot.exists()) {
         console.log(snapshot.val());
+        return snapshot.val();
       } else {
         console.log("No friends");
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+};
+
+export const getRelationship = (user1ID: string, user2ID: string) => {
+  const friendRef = ref(database, "friends/" + user1ID + "/" + user2ID);
+  get(friendRef)
+    .then((snapshot) => {
+      if (snapshot.exists()) {
+        console.log(snapshot.val());
+        return snapshot.val();
+      } else {
+        console.log("No relationship");
       }
     })
     .catch((error) => {
@@ -34,10 +62,22 @@ export const createEvent = (
 ) => {
   const eventID = uuidv4();
 
-  const relListRef = ref(database, "events/" + eventID);
-  set(relListRef, { name, date, location, imageIDs });
+  const eventListRef = ref(database, "events/" + eventID);
+  set(eventListRef, { name, date, location, imageIDs });
 
   return eventID;
+};
+
+export const addEventToRelationship = (
+  relID: string,
+  name: string,
+  date: string,
+  location: string,
+  imageIDs: string[]
+) => {
+  const eventID = createEvent(name, date, location, imageIDs);
+  const relRef = ref(database, "relationships/" + relID);
+  push(relRef, eventID);
 };
 
 export const addImagesToEvent = (eventID: string, imageIDs: string[]) => {
@@ -49,13 +89,34 @@ export const addImagesToEvent = (eventID: string, imageIDs: string[]) => {
   return eventID;
 };
 
-export const addRelationshipFromEvent = (
-  userID1: string,
-  userID2: string,
-  eventID: string
-) => {
-  const relName =
-    userID1 < userID2 ? userID1 + "_" + userID2 : userID2 + "_" + userID1;
-  const relListRef = ref(database, "relationship/" + relName + "/events");
-  push(relListRef, eventID);
+export const getEventsByRelationship = (relID: string) => {
+  const relListRef = ref(database, "relationships/" + relID);
+  get(relListRef)
+    .then((snapshot) => {
+      if (snapshot.exists()) {
+        console.log(snapshot.val());
+        return snapshot.val();
+      } else {
+        console.log("No events");
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+};
+
+export const getNumberOfEventsByRelationship = (relID: string) => {
+  const relListRef = ref(database, "relationships/" + relID);
+  get(relListRef)
+    .then((snapshot) => {
+      if (snapshot.exists()) {
+        console.log(Object.keys(snapshot.val()).length);
+        return Object.keys(snapshot.val()).length;
+      } else {
+        console.log("No events");
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+    });
 };
