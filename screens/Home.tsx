@@ -6,16 +6,17 @@ import { useAssets } from 'expo-asset';
 
 import BackgroundImage from '../assets/background.jpeg';
 import { getAuth, signOut } from 'firebase/auth';
-import { getFriends, findUser } from '../utils/firebase/realtimedb';
+import { getFriends, findUser, getStrengthByRelationship, getUserInfo } from '../utils/firebase/realtimedb';
 
-type TreeInfo = { name: string; stage: number; treeName: string; uid: string };
+type TreeInfo = { friendName: string; stage: number; treeName: string; friendID: string; };
 type TreeProps = {
-  name: string;
+  friendName: string;
   stage: number;
   treeName: string;
-  uid: string;
+  friendID: string;
   top: number;
   left: number;
+  navigation: any;
 };
 
 const auth = getAuth();
@@ -66,7 +67,7 @@ const middleLaneTreeDimensions = [
   },
 ];
 
-function Tree({ name, stage, treeName, uid, left, top }: TreeProps) {
+function Tree({ friendName, stage, treeName, friendID, left, top, navigation }: TreeProps) {
   const [firTreeAssets] = useAssets([
     require('../assets/fir_tree/1.png'),
     require('../assets/fir_tree/2.png'),
@@ -92,7 +93,9 @@ function Tree({ name, stage, treeName, uid, left, top }: TreeProps) {
     dimensions = middleLaneTreeDimensions[stage];
   }
 
-  const handlePress = () => {};
+  const handlePress = () => {
+    navigation.navigate('Chat', { user: [friendID, { name: friendName, id: friendID}] });
+  };
 
   return (
     <View style={[treeStyles.container, { left: left, top: top }]}>
@@ -109,7 +112,7 @@ function Tree({ name, stage, treeName, uid, left, top }: TreeProps) {
           style={[treeStyles.image, dimensions]}
         />
         <View style={treeStyles.name}>
-          <Text>{name}</Text>
+          <Text>{friendName}</Text>
         </View>
       </Button>
     </View>
@@ -135,12 +138,19 @@ const treeStyles = StyleSheet.create({
   },
 });
 
-async function getTreeInfos(): Promise<[TreeInfo] | undefined> {
+async function getTreeInfos(): Promise<TreeInfo[] | undefined> {
   if (!auth.currentUser?.uid) return undefined;
   const friends = await getFriends(auth.currentUser.uid);
+  const treeInfos = []
+  for (const [friendID, relID] of Object.entries(friends)) {
+    const strength = await getStrengthByRelationship(relID)
+    const friendInfo = await getUserInfo(friendID)
+    treeInfos.push({ friendName: friendInfo.name, friendID: friendID, stage: strength, treeName: 'fir_tree'})
+  }
+  return treeInfos
 }
 
-function getTrees(treeInfos: [TreeInfo]) {
+function getTrees(treeInfos: TreeInfo[], navigation) {
   let left = 30;
   let top = 0;
   return treeInfos.map((treeInfo) => {
@@ -159,7 +169,8 @@ function getTrees(treeInfos: [TreeInfo]) {
         {...treeInfo}
         left={leftRandomized}
         top={topRandomized}
-        key={treeInfo.uid}
+        navigation = {navigation}
+        key={treeInfo.friendID}
       />
     );
   });
@@ -230,32 +241,19 @@ function SearchBar({ navigation }) {
 }
 
 export default function HomeScreen({ navigation }) {
-  const [treeInfos, setTreeInfos] = useState<[TreeInfo]>();
+  const [treeInfos, setTreeInfos] = useState<TreeInfo[]>();
 
   useEffect(() => {
-    setTreeInfos([
-      {
-        name: 'my namea sdf asd',
-        stage: 2,
-        treeName: 'fir_tree',
-        uid: 'asd9fjas9d-d',
-      },
-      { name: 'my name', stage: 1, treeName: 'fir_tree', uid: 'asd9fjas9-4d' },
-      { name: 'my name', stage: 2, treeName: 'fir_tree', uid: 'asd9fjas9-da' },
-      { name: 'my name', stage: 4, treeName: 'fir_tree', uid: 'asd9fjas9-dt' },
-      {
-        name: 'my name',
-        stage: 0,
-        treeName: 'middle_lane_tree',
-        uid: 'asd9rfjas9-d',
-      },
-    ]);
+    const setTreeInfosAsync = async () => {
+      setTreeInfos(await getTreeInfos())
+    }
+    setTreeInfosAsync()
   }, []);
 
   return (
     <View style={styles.container}>
       <ImageBackground source={BackgroundImage} style={styles.image}>
-        <View style={styles.treeView}>{treeInfos && getTrees(treeInfos)}</View>
+        <View style={styles.treeView}>{treeInfos && getTrees(treeInfos, navigation)}</View>
         <SearchBar navigation={navigation} />
         <Icon
           reverse
