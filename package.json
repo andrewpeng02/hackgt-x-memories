@@ -14,11 +14,14 @@
     "dotenv": "^16.3.1",
     "expo": "~49.0.13",
     "expo-constants": "~14.4.2",
+    "expo-image-picker": "~14.3.2",
     "expo-status-bar": "~1.6.0",
     "firebase": "^10.5.0",
     "react": "18.2.0",
     "react-native": "0.72.5",
-    "react-native-elements": "^3.4.3"
+    "react-native-elements": "^3.4.3",
+    "uuid": "^9.0.1",
+    "react-native-get-random-values": "~1.9.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
