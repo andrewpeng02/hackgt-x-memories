@@ -308,7 +308,7 @@ export default function ChatScreen({ navigation, route }) {
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
-      quality: 1,
+      quality: 0,
       allowsMultipleSelection: true,
     });
 
