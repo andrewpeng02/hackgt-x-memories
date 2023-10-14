@@ -6,6 +6,35 @@ import { v4 as uuidv4 } from "uuid";
 
 const database = getDatabase(app);
 
+export const createUser = (userID: string, name: string, email: string) => {
+  const userRef = ref(database, "users/" + userID);
+  set(userRef, { name, email });
+};
+
+export const findUser = async (query: string) => {
+  const userRef = ref(database, "users/");
+  const user = await get(userRef)
+    .then((snapshot) => {
+      if (snapshot.exists()) {
+        console.log(
+          Object.entries(snapshot.val()).find(
+            (user) => user[1].email.toLowerCase() === query.toLowerCase()
+          )
+        );
+        return Object.entries(snapshot.val()).find(
+          (user) => user[1].email.toLowerCase() === query.toLowerCase()
+        );
+      } else {
+        console.log("No data available");
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+  if (user) return user;
+  else return undefined;
+};
+
 export const addFriend = (adderUID: string, addedUID: string) => {
   const friendRef = ref(database, "friends/" + adderUID + "/" + addedUID);
   const alreadyFriends = get(friendRef).then((snapshot) => {
